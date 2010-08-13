@@ -1,0 +1,76 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.jboss.managed.beans</groupId>
+        <artifactId>managed-beans-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>org.jboss.managed.beans</groupId>
+    <artifactId>managed-beans-mc-deployer</artifactId>
+
+    <name>JBoss Micro Container based deployer(s) for Managed Beans</name>
+    <url>http://www.jboss.org</url>
+
+    <properties>
+        <version.org.jboss.deployers.jboss_deployers_spi>2.2.0.Alpha4</version.org.jboss.deployers.jboss_deployers_spi>
+        <version.org.jboss.reloaded_jboss.reloaded.vdf.bootstrap.minimal>0.1.1</version.org.jboss.reloaded_jboss.reloaded.vdf.bootstrap.minimal>
+        <version.org.jboss.kernel>2.2.0.Alpha2</version.org.jboss.kernel>
+        <version.jboss.scanning>1.0.0.Alpha5</version.jboss.scanning>
+    </properties>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>managed-beans-metadata</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>managed-beans-jbxb-metadata</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>managed-beans-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!--  MC deployers -->
+        <dependency>
+            <groupId>org.jboss.deployers</groupId>
+            <artifactId>jboss-deployers-spi</artifactId>
+            <version>${version.org.jboss.deployers.jboss_deployers_spi}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.deployers</groupId>
+            <artifactId>jboss-deployers-vfs-spi</artifactId>
+            <version>${version.org.jboss.deployers.jboss_deployers_spi}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.kernel</groupId>
+            <artifactId>jboss-kernel</artifactId>
+            <version>${version.org.jboss.kernel}</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <!-- Annotation scanning support -->
+        <dependency>
+            <groupId>org.jboss.scanning</groupId>
+            <artifactId>scanning-plugins</artifactId>
+            <version>${version.jboss.scanning}</version>
+            <scope>provided</scope>
+        </dependency>
+
+    </dependencies>
+</project>

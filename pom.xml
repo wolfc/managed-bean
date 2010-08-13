@@ -1,0 +1,101 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  
+  <groupId>org.jboss.managed.beans</groupId>
+  <artifactId>managed-beans-parent</artifactId>
+  <packaging>pom</packaging>
+  <version>1.0.0-SNAPSHOT</version>	
+  
+  <name>JBoss Managed Beans Parent project</name>
+  <url>http://www.jboss.org</url>
+  <description>
+    Parent/Aggregator project for JBoss Managed Beans
+  </description>
+  
+  <modules>
+	<module>metadata</module>
+	<module>spi</module>
+	<module>impl</module>
+	<module>jbxb-metadata-impl</module>
+	<module>mc-deployer</module>
+  </modules>
+
+    <!-- Build -->
+    <build>
+
+        <plugins>
+
+            <!-- Compiler JDK6 -->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <inherited>true</inherited>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <showDeprecation>false</showDeprecation>
+                    <showWarnings>true</showWarnings>
+                    <optimize>true</optimize>
+                    <compilerVersion>1.6</compilerVersion>
+                    <fork>true</fork>
+                    <argLine>-Xmx512M</argLine>
+                    <executable>${JAVA_HOME}/bin/javac</executable>
+                </configuration>
+            </plugin>
+
+            <!-- Surefire -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.4.3</version>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <printSummary>true</printSummary>
+                    <forkMode>always</forkMode>
+                    <testFailureIgnore>false</testFailureIgnore>
+ 					<includes>
+            			<include>**/*TestCase.java</include>
+            			<include>**/*TestSuite.java</include>
+          			</includes>                    
+                </configuration>
+            </plugin>
+
+            <!-- Enforce Maven Environment -->
+            <plugin>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-maven-environment</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <rules>
+                        <requireJavaVersion>
+                            <version>1.6</version> <!-- Must be JDK6 -->
+                        </requireJavaVersion>
+                        <requireProperty>
+                            <property>env.JAVA_HOME</property>
+                            <message>"JAVA_HOME needs to be
+                                set to compile"</message>
+                        </requireProperty>
+                    </rules>
+                </configuration>
+            </plugin>
+            
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                  <archive>
+                    <!--  We don't want .jar/META-INF/maven/* folder/files in the generated jar -->
+                    <addMavenDescriptor>false</addMavenDescriptor>
+                  </archive>
+                </configuration>
+          </plugin>
+            
+        </plugins>
+
+    </build>  
+</project>
