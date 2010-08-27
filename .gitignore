@@ -6,6 +6,10 @@
 .project
 .settings
 
+#idea
+.idea
+*.iml
+
 #Maven
 eclipse-target
 target
