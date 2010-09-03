@@ -1,25 +1,38 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
-  
-  <groupId>org.jboss.managed.beans</groupId>
-  <artifactId>managed-beans-parent</artifactId>
-  <packaging>pom</packaging>
-  <version>1.0.0-SNAPSHOT</version>	
-  
-  <name>JBoss Managed Beans Parent project</name>
-  <url>http://www.jboss.org</url>
-  <description>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.jboss.managed.beans</groupId>
+    <artifactId>managed-beans-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <name>JBoss Managed Beans Parent project</name>
+    <url>http://www.jboss.org</url>
+    <description>
     Parent/Aggregator project for JBoss Managed Beans
-  </description>
-  
-  <modules>
-	<module>metadata</module>
-	<module>spi</module>
-	<module>impl</module>
-	<module>jbxb-metadata-impl</module>
-	<module>mc-deployer</module>
-  </modules>
+    </description>
+
+
+    <properties>
+        <version.junit>4.7</version.junit>
+        <version.reloaded.naming>0.1.0</version.reloaded.naming>
+        <version.org.jboss.deployers.jboss_deployers_spi>2.2.0.Alpha4</version.org.jboss.deployers.jboss_deployers_spi>
+        <version.org.jboss.reloaded_jboss.reloaded.vdf.bootstrap.minimal>0.1.1</version.org.jboss.reloaded_jboss.reloaded.vdf.bootstrap.minimal>
+        <version.org.jboss.kernel>2.2.0.Alpha2</version.org.jboss.kernel>
+        <version.jboss.scanning>1.0.0.Alpha5</version.jboss.scanning>
+    </properties>
+
+    <modules>
+        <module>metadata</module>
+        <module>spi</module>
+        <module>impl</module>
+        <module>proxy-impl</module>
+        <module>metadata-impl</module>
+        <module>metadata-jbmeta</module>
+        <module>mc-deployer</module>
+    </modules>
 
     <!-- Build -->
     <build>
@@ -52,10 +65,10 @@
                     <printSummary>true</printSummary>
                     <forkMode>always</forkMode>
                     <testFailureIgnore>false</testFailureIgnore>
- 					<includes>
-            			<include>**/*TestCase.java</include>
-            			<include>**/*TestSuite.java</include>
-          			</includes>                    
+                    <includes>
+                        <include>**/*TestCase.java</include>
+                        <include>**/*TestSuite.java</include>
+                    </includes>
                 </configuration>
             </plugin>
 
@@ -78,24 +91,82 @@
                         <requireProperty>
                             <property>env.JAVA_HOME</property>
                             <message>"JAVA_HOME needs to be
-                                set to compile"</message>
+                                set to
+                                compile"</message>
                         </requireProperty>
                     </rules>
                 </configuration>
             </plugin>
-            
+
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
-                  <archive>
-                    <!--  We don't want .jar/META-INF/maven/* folder/files in the generated jar -->
-                    <addMavenDescriptor>false</addMavenDescriptor>
-                  </archive>
+                    <archive>
+                        <!--
+                            We don't want .jar/META-INF/maven/*
+                            folder/files in the generated jar
+                        -->
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                    </archive>
                 </configuration>
-          </plugin>
-            
+            </plugin>
+
         </plugins>
 
-    </build>  
+    </build>
+
+
+    <dependencyManagement>
+        <dependencies>
+
+            <!--  Reloaded Naming -->
+            <dependency>
+                <groupId>org.jboss.reloaded</groupId>
+                <artifactId>jboss-reloaded-naming</artifactId>
+                <version>${version.reloaded.naming}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.reloaded</groupId>
+                <artifactId>jboss-reloaded-naming-deployers</artifactId>
+                <version>${version.reloaded.naming}</version>
+            </dependency>
+
+            <!--  MC deployers -->
+            <dependency>
+                <groupId>org.jboss.deployers</groupId>
+                <artifactId>jboss-deployers-spi</artifactId>
+                <version>${version.org.jboss.deployers.jboss_deployers_spi}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jboss.deployers</groupId>
+                <artifactId>jboss-deployers-vfs-spi</artifactId>
+                <version>${version.org.jboss.deployers.jboss_deployers_spi}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jboss.kernel</groupId>
+                <artifactId>jboss-kernel</artifactId>
+                <version>${version.org.jboss.kernel}</version>
+            </dependency>
+
+
+            <!-- Annotation scanning support -->
+            <dependency>
+                <groupId>org.jboss.scanning</groupId>
+                <artifactId>scanning-plugins</artifactId>
+                <version>${version.jboss.scanning}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <scope>test</scope>
+                <version>${version.junit}</version>
+            </dependency>
+
+        </dependencies>
+
+    </dependencyManagement>
 </project>

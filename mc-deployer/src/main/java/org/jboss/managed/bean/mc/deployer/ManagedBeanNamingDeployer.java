@@ -24,6 +24,7 @@ package org.jboss.managed.bean.mc.deployer;
 import java.util.Collection;
 
 import org.jboss.beans.metadata.api.annotations.Inject;
+import org.jboss.beans.metadata.plugins.AbstractInjectionValueMetaData;
 import org.jboss.beans.metadata.plugins.builder.BeanMetaDataBuilderFactory;
 import org.jboss.beans.metadata.spi.BeanMetaData;
 import org.jboss.beans.metadata.spi.builder.BeanMetaDataBuilder;
@@ -31,34 +32,30 @@ import org.jboss.deployers.spi.DeploymentException;
 import org.jboss.deployers.spi.deployer.DeploymentStages;
 import org.jboss.deployers.spi.deployer.helpers.AbstractDeployer;
 import org.jboss.deployers.structure.spi.DeploymentUnit;
-import org.jboss.managed.bean.impl.manager.ManagedBeanManager;
 import org.jboss.managed.bean.metadata.ManagedBeanDeploymentMetaData;
 import org.jboss.managed.bean.metadata.ManagedBeanMetaData;
+import org.jboss.managed.bean.proxy.impl.ManagedBeanProxyObjectFactory;
 import org.jboss.reloaded.naming.deployers.javaee.JavaEEComponentInformer;
 
 /**
- * Responsible for picking up {@link DeploymentUnit}s which have {@link ManagedBeanDeploymentMetaData}
- * and create a {@link ManagedBeanManager} for each of the {@link ManagedBeanMetaData} contained in
- * that {@link ManagedBeanDeploymentMetaData}
+ * ManagedBeanNamingDeployer
  *
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public class ManagedBeanManagerDeployer extends AbstractDeployer
+public class ManagedBeanNamingDeployer extends AbstractDeployer
 {
    /**
     * component informer
     */
    private JavaEEComponentInformer javaeeComponentInformer;
 
-   public ManagedBeanManagerDeployer()
+   public ManagedBeanNamingDeployer()
    {
       this.setStage(DeploymentStages.REAL);
 
       this.setInput(ManagedBeanDeploymentMetaData.class);
 
-      // we output MC bean metadata
-      this.setOutput(BeanMetaData.class);
    }
 
    @Inject
@@ -98,17 +95,21 @@ public class ManagedBeanManagerDeployer extends AbstractDeployer
                + " in unit " + unit, cnfe);
       }
 
-      String managedBeanManagerMCBeanName = ManagedBeanManagerIdentifierGenerator.generateIdentifier(
+      String mbManagerIdentifier = ManagedBeanManagerIdentifierGenerator.generateIdentifier(
             this.javaeeComponentInformer, unit, managedBean);
-      ManagedBeanManager<?> managedBeanManager = new ManagedBeanManager(managedBeanManagerMCBeanName, beanClass,
-            managedBean);
-      BeanMetaDataBuilder builder = BeanMetaDataBuilderFactory.createBuilder(managedBeanManagerMCBeanName,
-            ManagedBeanManager.class.getName());
 
-      builder.setConstructorValue(managedBeanManager);
+      String moduleName = this.javaeeComponentInformer.getModulePath(unit);
+      String jndiName = moduleName + "/" + managedBean.getName();
+      JNDIBinder jndiBinder = new JNDIBinder(jndiName, new ManagedBeanProxyObjectFactory(mbManagerIdentifier));
 
-      unit.addAttachment(BeanMetaData.class + ":" + managedBeanManagerMCBeanName, builder.getBeanMetaData(),
-            BeanMetaData.class);
+      String jndiBinderName = "managed-bean-jndibinder:" + jndiName;
+      BeanMetaDataBuilder builder = BeanMetaDataBuilderFactory
+            .createBuilder(jndiBinderName, JNDIBinder.class.getName());
+      builder.setConstructorValue(jndiBinder);
+      AbstractInjectionValueMetaData javaeeModuleInjectMetaData = new AbstractInjectionValueMetaData(this
+            .getJavaEEModuleMCBeanName(unit));
+      builder.addPropertyMetaData("jndiContext", javaeeModuleInjectMetaData);
+      unit.addAttachment(BeanMetaData.class + ":" + jndiBinderName, builder.getBeanMetaData(), BeanMetaData.class);
 
    }
 
@@ -119,4 +120,17 @@ public class ManagedBeanManagerDeployer extends AbstractDeployer
       return Class.forName(managedBean.getManagedBeanClass(), false, cl);
    }
 
+   private String getJavaEEModuleMCBeanName(DeploymentUnit deploymentUnit)
+   {
+      String applicationName = this.javaeeComponentInformer.getApplicationName(deploymentUnit);
+      String moduleName = this.javaeeComponentInformer.getModulePath(deploymentUnit);
+
+      final StringBuilder builder = new StringBuilder("jboss.naming:");
+      if (applicationName != null)
+      {
+         builder.append("application=").append(applicationName).append(",");
+      }
+      builder.append("module=").append(moduleName);
+      return builder.toString();
+   }
 }

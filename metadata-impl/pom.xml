@@ -10,25 +10,24 @@
     </parent>
 
     <groupId>org.jboss.managed.beans</groupId>
-    <artifactId>managed-beans-spi</artifactId>
+    <artifactId>managed-beans-metadata-impl</artifactId>
 
-    <name>SPI for Managed Beans</name>
+    <name>Implementation of Managed Beans metadata</name>
     <url>http://www.jboss.org</url>
-    <description>SPI for Managed Beans</description>
-    
+
     <dependencies>
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>managed-beans-metadata</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
-        <!-- TODO: Remove this impl dependency, once reloaded-naming is split into SPI -->
-        <dependency>
-            <groupId>org.jboss.reloaded</groupId>
-            <artifactId>jboss-reloaded-naming</artifactId>
-        </dependency>
-    
-    </dependencies>
 
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
 </project>

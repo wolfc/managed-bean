@@ -23,6 +23,8 @@ package org.jboss.managed.bean.metadata;
 
 import java.util.Collection;
 
+import org.jboss.interceptor.spi.metadata.InterceptorMetadata;
+
 /**
  * Represents the metadata for a Managed Bean
  *
@@ -67,4 +69,21 @@ public interface ManagedBeanMetaData
     * @return
     */
    Collection<NamedMethodMetaData> getPreDestroys();
+   
+   
+   /**
+    * Returns all the interceptors that are applicable for this managed bean.
+    * If there are no applicable interceptors for this managed bean, then this
+    * method returns an empty {@link Collection}
+    * @return
+    */
+   Collection<InterceptorMetadata> getInterceptors();
+   
+   /**
+    * Returns the around-invoke interceptors that are applicable for this managed bean.
+    * If there are no around-invoke interceptors applicable for this managed bean, then
+    * this method returns an empty {@link Collection}
+    * @return
+    */
+   Collection<InterceptorMetadata> getAroundInvokeInterceptors();
 }

@@ -21,11 +21,21 @@
  */
 package org.jboss.managed.bean.impl.manager;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
 
+import javax.interceptor.InvocationContext;
+
+import org.jboss.interceptor.proxy.DefaultInvocationContextFactory;
+import org.jboss.interceptor.proxy.InterceptorInvocation;
+import org.jboss.interceptor.proxy.SimpleInterceptionChain;
+import org.jboss.interceptor.spi.context.InterceptionChain;
+import org.jboss.interceptor.spi.metadata.InterceptorMetadata;
+import org.jboss.interceptor.spi.model.InterceptionType;
+import org.jboss.managed.bean.impl.ManagedBeanInstanceImpl;
 import org.jboss.managed.bean.metadata.ManagedBeanMetaData;
-import org.jboss.managed.bean.spi.InvocationContext;
+import org.jboss.managed.bean.spi.ManagedBeanInstance;
 
 /**
  * Manages a managed bean.
@@ -53,17 +63,17 @@ public class ManagedBeanManager<T>
     * The identifier of this managed bean manager
     */
    private String id;
-   
+
    /**
     * Managed bean metadata
     */
    private ManagedBeanMetaData mbMetaData;
-   
+
    /**
     * The managed bean class
     */
    private Class<T> managedBeanClass;
-   
+
    /**
     * Constructs a {@link ManagedBeanManager} for the passed managed bean class and metadata.
     * 
@@ -76,57 +86,83 @@ public class ManagedBeanManager<T>
       this.managedBeanClass = beanClass;
       this.mbMetaData = beanMetaData;
    }
-   
+
    public String getId()
    {
       return id;
    }
-   
+
    public void start()
    {
       ManagedBeanManagerRegistry.register(this.id, this);
    }
-   
+
    public void stop()
    {
       ManagedBeanManagerRegistry.unregister(id);
    }
-   
-   public <I> Object invoke(InvocationContext<I> invocationCtx)
+
+   public Object invoke(ManagedBeanInstance<T> managedBeanInstance, Method method, Object[] args) throws Throwable
    {
-      I targetIdentifier = invocationCtx.getTargetIdentifier();
-      Object managedBeanInstance = this.getManagedBeanInstance(targetIdentifier);
-      Method targetMethod = invocationCtx.getMethod();
-      
-      try
+      Collection<InterceptorMetadata> aroundInvokeInterceptors = this.mbMetaData.getAroundInvokeInterceptors();
+      Collection<InterceptorInvocation<?>> interceptorInvocations = new ArrayList<InterceptorInvocation<?>>(
+            aroundInvokeInterceptors.size());
+      for (InterceptorMetadata aroundInvokeInterceptor : aroundInvokeInterceptors)
       {
-         return targetMethod.invoke(managedBeanInstance, invocationCtx.getArgs());
+         // FIXME: interceptor metadata doesn't have a API to get interceptor classname
+         String interceptorClassName = null; //aroundInvokeInterceptor.getIntercetorClassName();
+         Object interceptorInstance = managedBeanInstance.getInterceptor(interceptorClassName);
+         InterceptorInvocation<?> interceptorInvocation = new InterceptorInvocation(interceptorInstance,
+               aroundInvokeInterceptor, InterceptionType.AROUND_INVOKE);
+         interceptorInvocations.add(interceptorInvocation);
       }
-      catch (IllegalArgumentException iae)
-      {
-         // TODO: Throw a better exception (like ManagedBeanInvocationException), so that clients can handle it if necessary
-         throw new RuntimeException(iae);
-      }
-      catch (IllegalAccessException iae)
-      {
-         // TODO: Throw a better exception (like ManagedBeanInvocationException), so that clients can handle it if necessary
-         throw new RuntimeException(iae);
-      }
-      catch (InvocationTargetException ite)
-      {
-         // TODO: Throw a better exception (like ManagedBeanInvocationException), so that clients can handle it if necessary
-         throw new RuntimeException(ite);
-      }
+      InterceptionChain interceptorChain = new SimpleInterceptionChain(interceptorInvocations,
+            InterceptionType.AROUND_INVOKE, managedBeanInstance.getInstance(), method);
+      DefaultInvocationContextFactory invocationCtxFactory = new DefaultInvocationContextFactory();
+      InvocationContext invocationCtx = invocationCtxFactory.newInvocationContext(interceptorChain, managedBeanInstance
+            .getInstance(), method, args);
+      return interceptorChain.invokeNextInterceptor(invocationCtx);
    }
-   
-   private <I> Object getManagedBeanInstance(I targetIdentifier)
+
+
+   public ManagedBeanInstance<T> createManagedBeanInstance()
    {
       // TODO: See if we can (re)use the jboss-ejb3-bean-instantiator SPI (after moving it out as a non-EJB3 SPI)
-      
+      T managedBeanInstance = this.createInstance(this.managedBeanClass);
+      Collection<Object> interceptorInstances = this.createInterceptors();
+      return new ManagedBeanInstanceImpl<T>(managedBeanInstance, interceptorInstances);
+   }
+
+   private Collection<Object> createInterceptors()
+   {
+      Collection<Object> interceptorInstances = new ArrayList<Object>(this.mbMetaData.getInterceptors());
+      for (InterceptorMetadata interceptor : this.mbMetaData.getInterceptors())
+      {
+         // FIXME: The interceptor metadata doesn't have a API to get the
+         // class name of the interceptor
+         String interceptorClassName = null;//interceptor.getInterceptorClass();
+         try
+         {
+            Class<?> interceptorClass = Class.forName(interceptorClassName, false, this.managedBeanClass
+                  .getClassLoader());
+            Object interceptorInstance = this.createInstance(interceptorClass);
+            interceptorInstances.add(interceptorInstance);
+         }
+         catch (ClassNotFoundException cnfe)
+         {
+            throw new RuntimeException("Could not load interceptor class: " + interceptorClassName, cnfe);
+         }
+
+      }
+      return interceptorInstances;
+   }
+
+   private <I> I createInstance(Class<I> klass)
+   {
       try
       {
          // for now just ignore the targetIdentifier and create a new instance
-         return this.managedBeanClass.newInstance();
+         return klass.newInstance();
       }
       catch (InstantiationException ie)
       {
@@ -141,4 +177,5 @@ public class ManagedBeanManager<T>
          throw new RuntimeException(iae);
       }
    }
+
 }

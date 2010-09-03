@@ -19,32 +19,51 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.managed.bean.metadata;
+package org.jboss.managed.bean.impl;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.jboss.managed.bean.spi.ManagedBeanInstance;
 
 /**
- * Represents the metadata for a managed bean deployment (for example: A deployment in the form of a
- * jar file containing multiple managed beans)
+ * ManagedBeanInstanceImpl
  *
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public interface ManagedBeanDeploymentMetaData
+public class ManagedBeanInstanceImpl<T> implements ManagedBeanInstance<T>
 {
+   private T instance;
+   
+   private Map<String, Object> interceptors = new HashMap<String, Object>();
 
-   /**
-    * Returns the managed beans contained in the deployment
-    * @return
-    */
-   Collection<ManagedBeanMetaData> getManagedBeans();
+   public ManagedBeanInstanceImpl(T instance, Collection<Object> interceptors)
+   {
+      this.instance = instance;
+      for (Object interceptor : interceptors)
+      {
+         this.interceptors.put(interceptor.getClass().getName(), interceptor);
+      }
+   }
    
-   /**
-    * Add managed beans to the deployment
-    * 
-    * @param managedBeans The managed beans
-    */
-   void addManagedBeans(ManagedBeanMetaData... managedBeans);
-   
-   ManagedBeanMetaData getManagedBean(String name);
+   @Override
+   public T getInstance()
+   {
+      return this.instance;
+   }
+
+   @Override
+   public Object getInterceptor(String interceptorClassName)
+   {
+      return this.interceptors.get(interceptorClassName);
+   }
+
+   @Override
+   public Collection<Object> getInterceptors()
+   {
+      return this.interceptors.values();
+   }
+
 }

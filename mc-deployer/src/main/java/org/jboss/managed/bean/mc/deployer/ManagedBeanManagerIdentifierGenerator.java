@@ -19,32 +19,40 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.managed.bean.metadata;
+package org.jboss.managed.bean.mc.deployer;
 
-import java.util.Collection;
+import org.jboss.deployers.structure.spi.DeploymentUnit;
+import org.jboss.managed.bean.metadata.ManagedBeanMetaData;
+import org.jboss.reloaded.naming.deployers.javaee.JavaEEComponentInformer;
 
 /**
- * Represents the metadata for a managed bean deployment (for example: A deployment in the form of a
- * jar file containing multiple managed beans)
+ * ManagedBeanManagerIdentifierGenerator
  *
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public interface ManagedBeanDeploymentMetaData
+public class ManagedBeanManagerIdentifierGenerator
 {
 
-   /**
-    * Returns the managed beans contained in the deployment
-    * @return
-    */
-   Collection<ManagedBeanMetaData> getManagedBeans();
-   
-   /**
-    * Add managed beans to the deployment
-    * 
-    * @param managedBeans The managed beans
-    */
-   void addManagedBeans(ManagedBeanMetaData... managedBeans);
-   
-   ManagedBeanMetaData getManagedBean(String name);
+   public static String generateIdentifier(JavaEEComponentInformer componentInformer, DeploymentUnit deploymentUnit,
+         ManagedBeanMetaData managedBean)
+   {
+      StringBuilder sb = new StringBuilder("org.jboss.managedbean:");
+
+      String applicationName = componentInformer.getApplicationName(deploymentUnit);
+      String moduleName = componentInformer.getModulePath(deploymentUnit);
+
+      if (applicationName != null)
+      {
+         sb.append("application=");
+         sb.append(applicationName);
+      }
+      sb.append("module=");
+      sb.append(moduleName);
+
+      sb.append("name=");
+      sb.append(managedBean.getName());
+
+      return sb.toString();
+   }
 }

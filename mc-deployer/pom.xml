@@ -15,12 +15,6 @@
     <name>JBoss Micro Container based deployer(s) for Managed Beans</name>
     <url>http://www.jboss.org</url>
 
-    <properties>
-        <version.org.jboss.deployers.jboss_deployers_spi>2.2.0.Alpha4</version.org.jboss.deployers.jboss_deployers_spi>
-        <version.org.jboss.reloaded_jboss.reloaded.vdf.bootstrap.minimal>0.1.1</version.org.jboss.reloaded_jboss.reloaded.vdf.bootstrap.minimal>
-        <version.org.jboss.kernel>2.2.0.Alpha2</version.org.jboss.kernel>
-        <version.jboss.scanning>1.0.0.Alpha5</version.jboss.scanning>
-    </properties>
 
     <dependencies>
 
@@ -32,7 +26,7 @@
         
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>managed-beans-jbxb-metadata</artifactId>
+            <artifactId>managed-beans-metadata-jbmeta</artifactId>
             <version>${project.version}</version>
         </dependency>
         
@@ -42,25 +36,35 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>managed-beans-proxy-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <!-- Reloaded naming deployers -->
+        <dependency>
+            <groupId>org.jboss.reloaded</groupId>
+            <artifactId>jboss-reloaded-naming-deployers</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <!--  MC deployers -->
         <dependency>
             <groupId>org.jboss.deployers</groupId>
             <artifactId>jboss-deployers-spi</artifactId>
-            <version>${version.org.jboss.deployers.jboss_deployers_spi}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.deployers</groupId>
             <artifactId>jboss-deployers-vfs-spi</artifactId>
-            <version>${version.org.jboss.deployers.jboss_deployers_spi}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.kernel</groupId>
             <artifactId>jboss-kernel</artifactId>
-            <version>${version.org.jboss.kernel}</version>
             <scope>provided</scope>
         </dependency>
         
@@ -68,7 +72,6 @@
         <dependency>
             <groupId>org.jboss.scanning</groupId>
             <artifactId>scanning-plugins</artifactId>
-            <version>${version.jboss.scanning}</version>
             <scope>provided</scope>
         </dependency>
 
