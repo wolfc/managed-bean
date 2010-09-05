@@ -36,7 +36,7 @@ import org.jboss.interceptor.spi.model.InterceptionType;
 import org.jboss.managed.bean.impl.ManagedBeanInstanceImpl;
 import org.jboss.managed.bean.metadata.ManagedBeanMetaData;
 import org.jboss.managed.bean.spi.ManagedBeanInstance;
-
+import org.jboss.managed.bean.metadata.MethodMetadata;
 /**
  * Manages a managed bean.
  * 
@@ -53,16 +53,16 @@ import org.jboss.managed.bean.spi.ManagedBeanInstance;
  * Note that the {@link ManagedBeanManager} may utilize services from other SPIs for any/all of the above responsibilities.    
  * </p>
  *
+ * FIXME: After an initial working version, move this {@link ManagedBeanManager} as an SPI
+ * after deciding the contracts 
+ *  
  * @author Jaikiran Pai
  * @version $Revision: $
  */
+// Implementation note: Do NOT include any MC (or any other kernel) specific implicit/explicit semantics (like start() stop() etc...) in
+// this manager 
 public class ManagedBeanManager<T>
 {
-
-   /**
-    * The identifier of this managed bean manager
-    */
-   private String id;
 
    /**
     * Managed bean metadata
@@ -73,33 +73,21 @@ public class ManagedBeanManager<T>
     * The managed bean class
     */
    private Class<T> managedBeanClass;
+   
 
+   private Method postConstructMethod;
+   
    /**
     * Constructs a {@link ManagedBeanManager} for the passed managed bean class and metadata.
     * 
     * @param beanClass The managed bean class
     * @param beanMetaData The metadata of the managed bean
+    * 
     */
-   public ManagedBeanManager(String id, Class<T> beanClass, ManagedBeanMetaData beanMetaData)
+   public ManagedBeanManager(Class<T> beanClass, ManagedBeanMetaData beanMetaData)
    {
-      this.id = id;
       this.managedBeanClass = beanClass;
       this.mbMetaData = beanMetaData;
-   }
-
-   public String getId()
-   {
-      return id;
-   }
-
-   public void start()
-   {
-      ManagedBeanManagerRegistry.register(this.id, this);
-   }
-
-   public void stop()
-   {
-      ManagedBeanManagerRegistry.unregister(id);
    }
 
    public Object invoke(ManagedBeanInstance<T> managedBeanInstance, Method method, Object[] args) throws Throwable
@@ -109,9 +97,10 @@ public class ManagedBeanManager<T>
             aroundInvokeInterceptors.size());
       for (InterceptorMetadata aroundInvokeInterceptor : aroundInvokeInterceptors)
       {
-         // FIXME: interceptor metadata doesn't have a API to get interceptor classname
-         String interceptorClassName = null; //aroundInvokeInterceptor.getIntercetorClassName();
+         String interceptorClassName = aroundInvokeInterceptor.getInterceptorClass().getClassName();
          Object interceptorInstance = managedBeanInstance.getInterceptor(interceptorClassName);
+         // TODO: Interceptor invocation creation will be simplified in jboss-interceptors project.
+         // Currently being discussed with Marius
          InterceptorInvocation<?> interceptorInvocation = new InterceptorInvocation(interceptorInstance,
                aroundInvokeInterceptor, InterceptionType.AROUND_INVOKE);
          interceptorInvocations.add(interceptorInvocation);
@@ -121,26 +110,103 @@ public class ManagedBeanManager<T>
       DefaultInvocationContextFactory invocationCtxFactory = new DefaultInvocationContextFactory();
       InvocationContext invocationCtx = invocationCtxFactory.newInvocationContext(interceptorChain, managedBeanInstance
             .getInstance(), method, args);
-      return interceptorChain.invokeNextInterceptor(invocationCtx);
+      // invoke
+      return invocationCtx.proceed();
    }
 
 
-   public ManagedBeanInstance<T> createManagedBeanInstance()
+   public ManagedBeanInstance<T> createManagedBeanInstance() throws Exception
    {
       // TODO: See if we can (re)use the jboss-ejb3-bean-instantiator SPI (after moving it out as a non-EJB3 SPI)
-      T managedBeanInstance = this.createInstance(this.managedBeanClass);
+      T instance = this.createInstance(this.managedBeanClass);
       Collection<Object> interceptorInstances = this.createInterceptors();
-      return new ManagedBeanInstanceImpl<T>(managedBeanInstance, interceptorInstances);
+      ManagedBeanInstance<T> mbInstance = new ManagedBeanInstanceImpl<T>(instance, interceptorInstances);
+      // invoke post-construct
+      this.handlePostConstruct(mbInstance);
+      return mbInstance;
    }
 
+   private Method getPostConstructMethod()
+   {
+      if (this.postConstructMethod == null && this.mbMetaData.getPostConstructMethod() != null)
+      {
+         this.initPostConstructMethod();
+      }
+      return this.postConstructMethod;
+   }
+   
+   private void initPostConstructMethod()
+   {
+      MethodMetadata postConstructMetadata = this.mbMetaData.getPostConstructMethod();
+      String methodName = postConstructMetadata.getMethodName();
+      String[] params = postConstructMetadata.getMethodParams();
+      if (params == null)
+      {
+         params = new String[0];
+      }
+      ClassLoader cl = this.managedBeanClass.getClassLoader();
+      Class<?>[] paramTypes = new Class<?>[params.length];
+      int i = 0;
+      for (String param : params)
+      {
+         try
+         {
+            paramTypes[i++] = Class.forName(param, false, cl);
+         }
+         catch (ClassNotFoundException cnfe)
+         {
+            throw new RuntimeException("Could not load post-construct method param type: " + param, cnfe);
+         }
+      }
+      Class<?> klass = this.managedBeanClass;
+      while (klass != null)
+      {
+         try
+         {
+            this.postConstructMethod = klass.getDeclaredMethod(methodName, paramTypes);
+            return;
+         }
+         catch (SecurityException se)
+         {
+            throw new RuntimeException("Could not find post-construct method named: " + methodName + " on managed bean: " + this.managedBeanClass);
+         }
+         catch (NoSuchMethodException nsme)
+         {
+            // ignore
+         }
+         klass = klass.getSuperclass();
+      }
+   }
+   
+   private void handlePostConstruct(ManagedBeanInstance<T> managedBeanInstance) throws Exception
+   {
+      // TODO: Invoke post construct on MB and interceptors
+      Collection<InterceptorMetadata> postConstructInterceptors = this.mbMetaData.getPostConstructInterceptors();
+      Collection<InterceptorInvocation<?>> interceptorInvocations = new ArrayList<InterceptorInvocation<?>>(
+            postConstructInterceptors.size());
+      for (InterceptorMetadata postConstructInterceptor : postConstructInterceptors)
+      {
+         String interceptorClassName = postConstructInterceptor.getInterceptorClass().getClassName();
+         Object interceptorInstance = managedBeanInstance.getInterceptor(interceptorClassName);
+         // TODO: Interceptor invocation creation will be simplified in jboss-interceptors project.
+         // Currently being discussed with Marius
+         InterceptorInvocation<?> interceptorInvocation = new InterceptorInvocation(interceptorInstance, postConstructInterceptor, InterceptionType.POST_CONSTRUCT);
+         interceptorInvocations.add(interceptorInvocation);
+      }
+      InterceptionChain interceptorChain = new SimpleInterceptionChain(interceptorInvocations,
+            InterceptionType.POST_CONSTRUCT, managedBeanInstance.getInstance(), this.getPostConstructMethod());
+      DefaultInvocationContextFactory invocationCtxFactory = new DefaultInvocationContextFactory();
+      InvocationContext invocationCtx = invocationCtxFactory.newInvocationContext(interceptorChain, managedBeanInstance.getInstance(), this.postConstructMethod, null);
+      // invoke post-construct
+      invocationCtx.proceed();
+   }
+   
    private Collection<Object> createInterceptors()
    {
-      Collection<Object> interceptorInstances = new ArrayList<Object>(this.mbMetaData.getInterceptors());
+      Collection<Object> interceptorInstances = new ArrayList<Object>(this.mbMetaData.getInterceptors().size());
       for (InterceptorMetadata interceptor : this.mbMetaData.getInterceptors())
       {
-         // FIXME: The interceptor metadata doesn't have a API to get the
-         // class name of the interceptor
-         String interceptorClassName = null;//interceptor.getInterceptorClass();
+         String interceptorClassName = interceptor.getInterceptorClass().getClassName();
          try
          {
             Class<?> interceptorClass = Class.forName(interceptorClassName, false, this.managedBeanClass

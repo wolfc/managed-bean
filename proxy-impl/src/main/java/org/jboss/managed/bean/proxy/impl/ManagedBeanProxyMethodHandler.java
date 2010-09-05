@@ -38,12 +38,15 @@ import org.jboss.managed.bean.spi.ManagedBeanInstance;
 public class ManagedBeanProxyMethodHandler<T> implements MethodHandler
 {
 
+   private ManagedBeanManagerRegistry registry;
+   
    private String managedBeanManagerIdentifier;
 
    private ManagedBeanInstance<T> managedBeanInstance;
    
-   public ManagedBeanProxyMethodHandler(String managedBeanManagerIdentifier, ManagedBeanInstance<T> managedBeanInstance)
+   public ManagedBeanProxyMethodHandler(ManagedBeanManagerRegistry registry, String managedBeanManagerIdentifier, ManagedBeanInstance<T> managedBeanInstance)
    {
+      this.registry = registry;
       this.managedBeanManagerIdentifier = managedBeanManagerIdentifier;
       this.managedBeanInstance = managedBeanInstance;
    }
@@ -57,12 +60,12 @@ public class ManagedBeanProxyMethodHandler<T> implements MethodHandler
 
    private ManagedBeanManager<T> getManagedBeanManager()
    {
-      if (!ManagedBeanManagerRegistry.isRegistered(this.managedBeanManagerIdentifier))
+      if (!this.registry.isRegistered(this.managedBeanManagerIdentifier))
       {
          throw new IllegalStateException("Cannot find manager bean manager with id: "
                + this.managedBeanManagerIdentifier);
       }
-      return (ManagedBeanManager<T>) ManagedBeanManagerRegistry.get(this.managedBeanManagerIdentifier);
+      return (ManagedBeanManager<T>) this.registry.get(this.managedBeanManagerIdentifier);
    }
 
 }

@@ -19,27 +19,22 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.managed.bean.metadata;
+package org.jboss.managed.bean.metadata.jbmeta.test;
+
+import javax.interceptor.AroundInvoke;
+import javax.interceptor.InvocationContext;
 
 /**
- * Represents a named method
+ * InterceptorA
  *
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public interface NamedMethodMetaData
+public class InterceptorA
 {
-
-   /**
-    * Returns the name of the method
-    * @return
-    */
-   String getMethodName();
-   
-   /**
-    * Returns an array of fully qualified class names of the
-    * parameter types accepted by this named method
-    * @return
-    */
-   String[] getMethodParams();
+   @AroundInvoke
+   public Object aroundInvoke(InvocationContext ctx) throws Exception
+   {
+      return ctx.proceed();
+   }
 }

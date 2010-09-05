@@ -19,22 +19,33 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.managed.bean.impl.manager;
+package org.jboss.managed.bean.impl.test;
 
+import javax.annotation.ManagedBean;
+import javax.annotation.PostConstruct;
+import javax.interceptor.Interceptors;
 
 /**
- * ManagedBeanManagerRegistry
+ * ManagedBeanWithPostConstructAndPostConstructInterceptors
  *
- * FIXME: This needs to move to SPI, once {@link ManagedBeanManager}
- * is moved to SPI too
- * 
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public interface ManagedBeanManagerRegistry
+@ManagedBean
+@Interceptors ({InterceptorOneWithPostConstruct.class, InterceptorTwoWithPostConstruct.class})
+public class ManagedBeanWithPostConstructAndPostConstructInterceptors extends ManagedBeanWithPostConstructInterceptors
 {
 
-   ManagedBeanManager<?> get(String registryId) throws IllegalArgumentException;
+   private boolean postConstructInvoked = false;
    
-   boolean isRegistered(String registryId);
+   @PostConstruct
+   public void onConstruct()
+   {
+      this.postConstructInvoked = true;
+   }
+   
+   public boolean wasPostConstructCalled()
+   {
+      return this.postConstructInvoked;
+   }
 }

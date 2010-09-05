@@ -19,22 +19,23 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.managed.bean.impl.manager;
+package org.jboss.managed.bean.impl.test;
 
+import javax.interceptor.AroundInvoke;
+import javax.interceptor.InvocationContext;
 
 /**
- * ManagedBeanManagerRegistry
+ * InterceptorA
  *
- * FIXME: This needs to move to SPI, once {@link ManagedBeanManager}
- * is moved to SPI too
- * 
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public interface ManagedBeanManagerRegistry
+public class InterceptorA
 {
 
-   ManagedBeanManager<?> get(String registryId) throws IllegalArgumentException;
-   
-   boolean isRegistered(String registryId);
+   @AroundInvoke
+   public Object aroundInvoke(InvocationContext ctx) throws Exception
+   {
+      return ctx.proceed();
+   }
 }

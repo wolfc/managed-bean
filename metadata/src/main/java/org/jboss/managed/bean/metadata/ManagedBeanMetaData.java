@@ -22,6 +22,7 @@
 package org.jboss.managed.bean.metadata;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.jboss.interceptor.spi.metadata.InterceptorMetadata;
 
@@ -48,27 +49,22 @@ public interface ManagedBeanMetaData
    String getManagedBeanClass();
    
    /**
-    * Returns the post-construct method(s) metadata, of this managed bean.
-    * <p>
-    *   If there are no post-construct method(s) for this managed bean, then 
-    *   it's upto the implementations of {@link ManagedBeanMetaData} to either return null
-    *   or an empty {@link Collection}
-    * </p>
+    * Returns the post-construct method metadata, of this managed bean.
+    * If the managed bean has no post-construct method, then this method
+    * returns null
+    * 
     * @return
     */
-   Collection<NamedMethodMetaData> getPostConstructs();
+   MethodMetadata getPostConstructMethod();
    
    /**
     * 
-    * Returns the pre-destroy method(s) metadata, of this managed bean.
-    * <p>
-    *   If there are no pre-destroy method(s) for this managed bean, then 
-    *   it's upto the implementations of {@link ManagedBeanMetaData} to either return null
-    *   or an empty {@link Collection}
-    * </p>
+    * Returns the pre-destroy method metadata, of this managed bean.
+    * If the managed bean has no pre-destroy method, then this method
+    * returns null.
     * @return
     */
-   Collection<NamedMethodMetaData> getPreDestroys();
+   MethodMetadata getPreDestroyMethod();
    
    
    /**
@@ -77,7 +73,7 @@ public interface ManagedBeanMetaData
     * method returns an empty {@link Collection}
     * @return
     */
-   Collection<InterceptorMetadata> getInterceptors();
+   List<InterceptorMetadata> getInterceptors();
    
    /**
     * Returns the around-invoke interceptors that are applicable for this managed bean.
@@ -85,5 +81,13 @@ public interface ManagedBeanMetaData
     * this method returns an empty {@link Collection}
     * @return
     */
-   Collection<InterceptorMetadata> getAroundInvokeInterceptors();
+   List<InterceptorMetadata> getAroundInvokeInterceptors();
+   
+   /**
+    * Returns the around-invoke interceptors that are applicable for this managed bean.
+    * If there are no around-invoke interceptors applicable for this managed bean, then
+    * this method returns an empty {@link Collection}
+    * @return
+    */
+   List<InterceptorMetadata> getPostConstructInterceptors();
 }

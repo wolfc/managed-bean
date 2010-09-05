@@ -19,22 +19,27 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.managed.bean.impl.manager;
-
+package org.jboss.managed.bean.metadata;
 
 /**
- * ManagedBeanManagerRegistry
+ * Represents a method
  *
- * FIXME: This needs to move to SPI, once {@link ManagedBeanManager}
- * is moved to SPI too
- * 
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public interface ManagedBeanManagerRegistry
+public interface MethodMetadata
 {
 
-   ManagedBeanManager<?> get(String registryId) throws IllegalArgumentException;
+   /**
+    * Returns the name of the method
+    * @return
+    */
+   String getMethodName();
    
-   boolean isRegistered(String registryId);
+   /**
+    * Returns an array of fully qualified class names of the
+    * parameter types accepted by this named method
+    * @return
+    */
+   String[] getMethodParams();
 }

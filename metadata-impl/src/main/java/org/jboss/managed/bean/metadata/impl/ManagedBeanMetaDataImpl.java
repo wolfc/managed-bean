@@ -23,11 +23,13 @@ package org.jboss.managed.bean.metadata.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.List;
 
 import org.jboss.interceptor.spi.metadata.InterceptorMetadata;
+import org.jboss.interceptor.spi.model.InterceptionType;
 import org.jboss.managed.bean.metadata.ManagedBeanMetaData;
-import org.jboss.managed.bean.metadata.NamedMethodMetaData;
+import org.jboss.managed.bean.metadata.MethodMetadata;
 
 /**
  * ManagedBeanMetaDataImpl
@@ -48,7 +50,15 @@ public class ManagedBeanMetaDataImpl implements ManagedBeanMetaData
     */
    private String managedBeanName;
 
-   private Collection<InterceptorMetadata> interceptors;
+   /**
+    * Interceptors applicable to this managed bean
+    */
+   private List<InterceptorMetadata> interceptors;
+   
+   /**
+    * Post-construct method metadata
+    */
+   private MethodMetadata postConstructMethod;
    
    @Override
    public String getManagedBeanClass()
@@ -63,19 +73,23 @@ public class ManagedBeanMetaDataImpl implements ManagedBeanMetaData
    }
 
    @Override
-   public Collection<NamedMethodMetaData> getPostConstructs()
+   public MethodMetadata getPreDestroyMethod()
    {
       // TODO Auto-generated method stub
       return null;
    }
-
+   
    @Override
-   public Collection<NamedMethodMetaData> getPreDestroys()
+   public MethodMetadata getPostConstructMethod()
    {
-      // TODO Auto-generated method stub
-      return null;
+      return this.postConstructMethod;
    }
-
+   
+   public void setPostConstructMethod(MethodMetadata method)
+   {
+      this.postConstructMethod = method;
+   }
+   
    public void setManagedBeanClass(String managedBeanClass)
    {
       this.managedBeanClass = managedBeanClass;
@@ -90,25 +104,30 @@ public class ManagedBeanMetaDataImpl implements ManagedBeanMetaData
     * {@inheritDoc}
     */
    @Override
-   public Collection<InterceptorMetadata> getInterceptors()
+   public List<InterceptorMetadata> getInterceptors()
    {
       if (this.interceptors == null)
       {
-         return new HashSet<InterceptorMetadata>();
+         return Collections.EMPTY_LIST;
       }
       return this.interceptors;
    }
 
    @Override
-   public Collection<InterceptorMetadata> getAroundInvokeInterceptors()
+   public List<InterceptorMetadata> getAroundInvokeInterceptors()
    {
-      return this.getInterceptors();
-      
+      return this.getInterceptors(InterceptionType.AROUND_INVOKE);
+   }
+   
+   @Override
+   public List<InterceptorMetadata> getPostConstructInterceptors()
+   {
+      return this.getInterceptors(InterceptionType.POST_CONSTRUCT);
    }
    
    public void setInterceptors(Collection<InterceptorMetadata> interceptors)
    {
-      this.interceptors = interceptors; 
+      this.interceptors = new ArrayList<InterceptorMetadata>(interceptors); 
    }
    
    public void addInterceptor(InterceptorMetadata interceptor)
@@ -118,5 +137,22 @@ public class ManagedBeanMetaDataImpl implements ManagedBeanMetaData
          this.interceptors = new ArrayList<InterceptorMetadata>();
       }
       this.interceptors.add(interceptor);
+   }
+   
+   private List<InterceptorMetadata> getInterceptors(InterceptionType interceptionType)
+   {
+      if (this.interceptors == null)
+      {
+         return Collections.EMPTY_LIST;
+      }
+      List<InterceptorMetadata> applicableInterceptors = new ArrayList<InterceptorMetadata>();
+      for (InterceptorMetadata interceptor : this.interceptors)
+      {
+         if (interceptor.isEligible(interceptionType))
+         {
+            applicableInterceptors.add(interceptor);
+         }
+      }
+      return applicableInterceptors;
    }
 }

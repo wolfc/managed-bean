@@ -53,6 +53,9 @@ public class ManagedBeanProcessor extends AbstractComponentProcessor<ManagedBean
       // @Interceptors
       addTypeProcessor(new InterceptorsProcessor<Class<?>>(finder));
       addMethodProcessor(new InterceptorsProcessor<Method>(finder));
+      
+      // @PostConstruct
+      addMethodProcessor(new PostConstructProcessor(finder));
 
    }
 
@@ -86,6 +89,10 @@ public class ManagedBeanProcessor extends AbstractComponentProcessor<ManagedBean
       }
       // add this managed bean to the managed bean deployment metadata
       managedBeanDeploymentMetaData.addManagedBeans(managedBeanMetaData);
+      
+      
+      // Now start processing the managed bean class for class/method/field level annotations
+      super.processClass(managedBeanMetaData, managedBeanClass);
    }
 
 }

@@ -65,10 +65,6 @@
                     <printSummary>true</printSummary>
                     <forkMode>always</forkMode>
                     <testFailureIgnore>false</testFailureIgnore>
-                    <includes>
-                        <include>**/*TestCase.java</include>
-                        <include>**/*TestSuite.java</include>
-                    </includes>
                 </configuration>
             </plugin>
 

@@ -27,6 +27,9 @@ import javassist.util.proxy.ProxyFactory;
 
 import javax.naming.Context;
 import javax.naming.Name;
+import javax.naming.RefAddr;
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
 import javax.naming.spi.ObjectFactory;
 
 import org.jboss.managed.bean.impl.manager.ManagedBeanManager;
@@ -42,23 +45,46 @@ import org.jboss.managed.bean.spi.ManagedBeanInstance;
 public class ManagedBeanProxyObjectFactory implements ObjectFactory
 {
 
-   private String managerId;
-
-   public ManagedBeanProxyObjectFactory(String managerId)
-   {
-      this.managerId = managerId;
-   }
-
    @Override
    public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment)
          throws Exception
    {
-      ManagedBeanInstance<?> managedBeanInstance = this.getManagedBeanManager().createManagedBeanInstance();
-      return this.createProxy(managedBeanInstance);
+      // Cast Reference
+      if (!Reference.class.isInstance(obj))
+      {
+         throw new IllegalArgumentException("Object bound at " + name.toString() + " was not of expected type "
+               + Reference.class.getName());
+
+      }
+
+      Reference reference = (Reference) obj;
+      // get the managed bean manager registry
+      ManagedBeanManagerRegistryRefAddr registryRefAddr = this.getRefAddr(reference,
+            ManagedBeanProxyRefAddrType.MANAGER_REGISTRY_REF_ADDR_TYPE, ManagedBeanManagerRegistryRefAddr.class);
+      ManagedBeanManagerRegistry registry = (ManagedBeanManagerRegistry) registryRefAddr.getContent();
+      // get the manager bean manager id
+      StringRefAddr managerNameRefAddr = this.getRefAddr(reference,
+            ManagedBeanProxyRefAddrType.MANAGER_NAME_REF_ADDR_TYPE, StringRefAddr.class);
+      String managerName = (String) managerNameRefAddr.getContent();
+
+      ManagedBeanInstance<?> managedBeanInstance = this.getManagedBeanManager(registry, managerName).createManagedBeanInstance();
+      return this.createProxy(registry, managerName, managedBeanInstance);
 
    }
 
-   private <T> T createProxy(ManagedBeanInstance<T> managedBeanInstance) throws IllegalArgumentException
+   private <R> R getRefAddr(Reference reference, String addrType, Class<R> expectedType)
+   {
+      RefAddr refAddr = reference.get(addrType);
+      if (!expectedType.isInstance(refAddr))
+      {
+         throw new RuntimeException("Unexpected RefAddr: " + refAddr + " for addrType: " + addrType
+               + " expected type  was " + expectedType);
+      }
+      return expectedType.cast(refAddr);
+   }
+
+   private <T> T createProxy(ManagedBeanManagerRegistry registry, String managerName,
+         ManagedBeanInstance<T> managedBeanInstance) throws IllegalArgumentException
    {
       if (managedBeanInstance == null)
       {
@@ -72,7 +98,8 @@ public class ManagedBeanProxyObjectFactory implements ObjectFactory
 
       // Set the method handler which is responsible for handling the method invocations
       // on the proxy
-      javassistProxyFactory.setHandler(new ManagedBeanProxyMethodHandler<T>("", managedBeanInstance));
+      javassistProxyFactory
+            .setHandler(new ManagedBeanProxyMethodHandler<T>(registry, managerName, managedBeanInstance));
 
       try
       {
@@ -85,14 +112,15 @@ public class ManagedBeanProxyObjectFactory implements ObjectFactory
       }
 
    }
-
-   private ManagedBeanManager<?> getManagedBeanManager()
+   
+   private ManagedBeanManager<?> getManagedBeanManager(ManagedBeanManagerRegistry registry, String managerName)
    {
-      if (!ManagedBeanManagerRegistry.isRegistered(this.managerId))
+      if (!registry.isRegistered(managerName))
       {
-         throw new IllegalStateException("Cannot find manager bean manager with id: " + this.managerId);
+         throw new IllegalStateException("Cannot find managed bean manager with id: " + managerName);
       }
-      return (ManagedBeanManager<?>) ManagedBeanManagerRegistry.get(this.managerId);
+      return (ManagedBeanManager<?>) registry.get(managerName);
    }
+
 
 }

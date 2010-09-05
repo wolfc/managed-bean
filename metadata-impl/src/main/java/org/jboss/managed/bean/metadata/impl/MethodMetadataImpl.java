@@ -19,40 +19,45 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.managed.bean.mc.deployer;
+package org.jboss.managed.bean.metadata.impl;
 
-import org.jboss.deployers.structure.spi.DeploymentUnit;
-import org.jboss.managed.bean.metadata.ManagedBeanMetaData;
-import org.jboss.reloaded.naming.deployers.javaee.JavaEEComponentInformer;
+import org.jboss.managed.bean.metadata.MethodMetadata;
 
 /**
- * ManagedBeanManagerIdentifierGenerator
+ * MethodMetadataImpl
  *
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public class ManagedBeanManagerIdentifierGenerator
+public class MethodMetadataImpl implements MethodMetadata
 {
-
-   public static String generateIdentifier(JavaEEComponentInformer componentInformer, DeploymentUnit deploymentUnit,
-         ManagedBeanMetaData managedBean)
+   /** Method name */
+   private String methodName;
+   
+   /** Method params */
+   private String[] params;
+   
+   public MethodMetadataImpl(String methodName, String[] params)
    {
-      StringBuilder sb = new StringBuilder("org.jboss.managedbean:");
+      this.methodName = methodName;
+      this.params = params;
+   }
+   
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public String getMethodName()
+   {
+      return this.methodName;
+   }
 
-      String applicationName = componentInformer.getApplicationName(deploymentUnit);
-      String moduleName = componentInformer.getModulePath(deploymentUnit);
-
-      if (applicationName != null)
-      {
-         sb.append("application=");
-         sb.append(applicationName);
-      }
-      sb.append("module=");
-      sb.append(moduleName);
-
-      sb.append("name=");
-      sb.append(managedBean.getName());
-
-      return sb.toString();
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public String[] getMethodParams()
+   {
+      return this.params;
    }
 }

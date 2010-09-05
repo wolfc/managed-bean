@@ -98,10 +98,8 @@ public class ManagedBeanManagerDeployer extends AbstractDeployer
                + " in unit " + unit, cnfe);
       }
 
-      String managedBeanManagerMCBeanName = ManagedBeanManagerIdentifierGenerator.generateIdentifier(
-            this.javaeeComponentInformer, unit, managedBean);
-      ManagedBeanManager<?> managedBeanManager = new ManagedBeanManager(managedBeanManagerMCBeanName, beanClass,
-            managedBean);
+      String managedBeanManagerMCBeanName = this.getManagedBeanManagerMCBeanName(unit, managedBean);
+      ManagedBeanManager<?> managedBeanManager = new ManagedBeanManager(beanClass,managedBean);
       BeanMetaDataBuilder builder = BeanMetaDataBuilderFactory.createBuilder(managedBeanManagerMCBeanName,
             ManagedBeanManager.class.getName());
 
@@ -117,6 +115,27 @@ public class ManagedBeanManagerDeployer extends AbstractDeployer
       ClassLoader cl = unit.getClassLoader();
 
       return Class.forName(managedBean.getManagedBeanClass(), false, cl);
+   }
+   
+   private String getManagedBeanManagerMCBeanName(DeploymentUnit deploymentUnit, ManagedBeanMetaData managedBean)
+   {
+      StringBuilder sb = new StringBuilder("org.jboss.managedbean:");
+
+      String applicationName = this.javaeeComponentInformer.getApplicationName(deploymentUnit);
+      String moduleName = this.javaeeComponentInformer.getModulePath(deploymentUnit);
+
+      if (applicationName != null)
+      {
+         sb.append("application=");
+         sb.append(applicationName);
+      }
+      sb.append("module=");
+      sb.append(moduleName);
+
+      sb.append("name=");
+      sb.append(managedBean.getName());
+
+      return sb.toString();
    }
 
 }

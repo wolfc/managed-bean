@@ -19,22 +19,18 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.managed.bean.impl.manager;
-
+package org.jboss.managed.bean.proxy.impl;
 
 /**
- * ManagedBeanManagerRegistry
+ * ManagedBeanProxyRefAddrType
  *
- * FIXME: This needs to move to SPI, once {@link ManagedBeanManager}
- * is moved to SPI too
- * 
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public interface ManagedBeanManagerRegistry
+public interface ManagedBeanProxyRefAddrType
 {
 
-   ManagedBeanManager<?> get(String registryId) throws IllegalArgumentException;
+   public static final String MANAGER_REGISTRY_REF_ADDR_TYPE = "ManagedBeanManagerRegistryRefAddr";
    
-   boolean isRegistered(String registryId);
+   public static final String MANAGER_NAME_REF_ADDR_TYPE = "ManagedBeanManagerNameRefAddr";
 }

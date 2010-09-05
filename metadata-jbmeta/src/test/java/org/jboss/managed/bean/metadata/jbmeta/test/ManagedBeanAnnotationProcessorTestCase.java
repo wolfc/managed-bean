@@ -23,11 +23,13 @@ package org.jboss.managed.bean.metadata.jbmeta.test;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.Arrays;
+import java.util.Collection;
 
 import javax.annotation.ManagedBean;
 
 import junit.framework.Assert;
 
+import org.jboss.interceptor.spi.metadata.InterceptorMetadata;
 import org.jboss.managed.bean.metadata.ManagedBeanDeploymentMetaData;
 import org.jboss.managed.bean.metadata.ManagedBeanMetaData;
 import org.jboss.managed.bean.metadata.jbmeta.annotation.processor.ManagedBeanMetaDataCreator;
@@ -102,5 +104,24 @@ public class ManagedBeanAnnotationProcessorTestCase
       Assert.assertNull("Metadata for " + NotAManagedBean.class.getName() + " was unexpectedly created",
             notAManagedBean);
 
+   }
+
+   /**
+    * Tests that the correct metadata is created out of a managed bean with interceptors.
+    */
+   @Test
+   public void testInterceptorMetadata()
+   {
+      Class<?>[] classes = new Class<?>[]{ManagedBeanWithInterceptors.class};
+      ManagedBeanDeploymentMetaData managedBeanDeployment = metadataCreator.create(Arrays.asList(classes));
+      
+      ManagedBeanMetaData managedBean = managedBeanDeployment.getManagedBean(ManagedBeanWithInterceptors.class.getSimpleName());
+      
+      Assert.assertNotNull("Managed bean metadata not created", managedBean);
+      
+      Collection<InterceptorMetadata> interceptors = managedBean.getInterceptors();
+      Assert.assertNotNull("No interceptors assoicated with managed bean instance", interceptors);
+      Assert.assertEquals("Unexpected number of interceptors associated with managed bean instance", 1, interceptors.size());
+      
    }
 }

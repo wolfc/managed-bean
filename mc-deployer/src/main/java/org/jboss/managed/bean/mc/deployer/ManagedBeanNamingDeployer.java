@@ -23,6 +23,10 @@ package org.jboss.managed.bean.mc.deployer;
 
 import java.util.Collection;
 
+import javax.naming.RefAddr;
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
+
 import org.jboss.beans.metadata.api.annotations.Inject;
 import org.jboss.beans.metadata.plugins.AbstractInjectionValueMetaData;
 import org.jboss.beans.metadata.plugins.builder.BeanMetaDataBuilderFactory;
@@ -32,9 +36,12 @@ import org.jboss.deployers.spi.DeploymentException;
 import org.jboss.deployers.spi.deployer.DeploymentStages;
 import org.jboss.deployers.spi.deployer.helpers.AbstractDeployer;
 import org.jboss.deployers.structure.spi.DeploymentUnit;
+import org.jboss.managed.bean.impl.manager.ManagedBeanManagerRegistry;
 import org.jboss.managed.bean.metadata.ManagedBeanDeploymentMetaData;
 import org.jboss.managed.bean.metadata.ManagedBeanMetaData;
+import org.jboss.managed.bean.proxy.impl.ManagedBeanManagerRegistryRefAddr;
 import org.jboss.managed.bean.proxy.impl.ManagedBeanProxyObjectFactory;
+import org.jboss.managed.bean.proxy.impl.ManagedBeanProxyRefAddrType;
 import org.jboss.reloaded.naming.deployers.javaee.JavaEEComponentInformer;
 
 /**
@@ -48,7 +55,11 @@ public class ManagedBeanNamingDeployer extends AbstractDeployer
    /**
     * component informer
     */
+   @Inject
    private JavaEEComponentInformer javaeeComponentInformer;
+   
+   @Inject
+   private ManagedBeanManagerRegistry managedBeanManagerRegistry;
 
    public ManagedBeanNamingDeployer()
    {
@@ -58,7 +69,11 @@ public class ManagedBeanNamingDeployer extends AbstractDeployer
 
    }
 
-   @Inject
+   public void setManagedBeanManagerRegistry(ManagedBeanManagerRegistry registry)
+   {
+      this.managedBeanManagerRegistry = registry;
+   }
+   
    public void setJavaEEComponentInformer(JavaEEComponentInformer componentInformer)
    {
       this.javaeeComponentInformer = componentInformer;
@@ -95,12 +110,20 @@ public class ManagedBeanNamingDeployer extends AbstractDeployer
                + " in unit " + unit, cnfe);
       }
 
-      String mbManagerIdentifier = ManagedBeanManagerIdentifierGenerator.generateIdentifier(
-            this.javaeeComponentInformer, unit, managedBean);
+      String managedBeanManagerName = this.getManagedBeanManagerMCBeanName(unit, managedBean);
 
       String moduleName = this.javaeeComponentInformer.getModulePath(unit);
       String jndiName = moduleName + "/" + managedBean.getName();
-      JNDIBinder jndiBinder = new JNDIBinder(jndiName, new ManagedBeanProxyObjectFactory(mbManagerIdentifier));
+      
+      Reference reference = new Reference("Object Factory for managed bean", ManagedBeanProxyObjectFactory.class.getName(), null);
+      
+      RefAddr managerNameRefAddr = new StringRefAddr(ManagedBeanProxyRefAddrType.MANAGER_NAME_REF_ADDR_TYPE, managedBeanManagerName);
+      reference.add(managerNameRefAddr);
+      
+      RefAddr managedBeanManagerRegistryRefAddr = new ManagedBeanManagerRegistryRefAddr(this.managedBeanManagerRegistry);
+      reference.add(managedBeanManagerRegistryRefAddr);
+      
+      JNDIBinder jndiBinder = new JNDIBinder(jndiName, reference);
 
       String jndiBinderName = "managed-bean-jndibinder:" + jndiName;
       BeanMetaDataBuilder builder = BeanMetaDataBuilderFactory
@@ -132,5 +155,26 @@ public class ManagedBeanNamingDeployer extends AbstractDeployer
       }
       builder.append("module=").append(moduleName);
       return builder.toString();
+   }
+   
+   private String getManagedBeanManagerMCBeanName(DeploymentUnit deploymentUnit, ManagedBeanMetaData managedBean)
+   {
+      StringBuilder sb = new StringBuilder("org.jboss.managedbean:");
+
+      String applicationName = this.javaeeComponentInformer.getApplicationName(deploymentUnit);
+      String moduleName = this.javaeeComponentInformer.getModulePath(deploymentUnit);
+
+      if (applicationName != null)
+      {
+         sb.append("application=");
+         sb.append(applicationName);
+      }
+      sb.append("module=");
+      sb.append(moduleName);
+
+      sb.append("name=");
+      sb.append(managedBean.getName());
+
+      return sb.toString();
    }
 }
