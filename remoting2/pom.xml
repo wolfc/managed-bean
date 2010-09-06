@@ -1,0 +1,117 @@
+<!--
+  ~ JBoss, Home of Professional Open Source
+  ~ Copyright (c) 2010, Red Hat Middleware LLC, and individual contributors
+  ~ as indicated by the @authors tag. See the copyright.txt in the
+  ~ distribution for a full listing of individual contributors.
+  ~
+  ~ This is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU Lesser General Public License as
+  ~ published by the Free Software Foundation; either version 2.1 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This software is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this software; if not, write to the Free
+  ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+   <modelVersion>4.0.0</modelVersion>
+
+   <parent>
+      <groupId>org.jboss.managed.beans</groupId>
+      <artifactId>managed-beans-parent</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+   </parent>
+
+   <groupId>org.jboss.managed.beans</groupId>
+   <artifactId>managed-beans-remoting2</artifactId>
+
+   <name>JBoss Managed Beans Remoting2</name>
+   <url>http://www.jboss.org</url>
+
+   <description>
+      A prototype which allows Managed Beans to be called
+      remotely via JBoss Remoting 2.
+   </description>
+
+   <dependencies>
+      <dependency>
+         <groupId>${project.groupId}</groupId>
+         <artifactId>managed-beans-impl</artifactId>
+         <version>${project.version}</version>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>${project.groupId}</groupId>
+         <artifactId>managed-beans-mc-deployer</artifactId>
+         <version>${project.version}</version>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>${project.groupId}</groupId>
+         <artifactId>managed-beans-metadata-jbmeta</artifactId>
+         <version>${project.version}</version>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>junit</groupId>
+         <artifactId>junit</artifactId>
+         <scope>test</scope>
+      </dependency>
+
+      <!-- MC doesn't declare this as a proper dependency -->
+      <dependency>
+         <groupId>org.jboss.man</groupId>
+         <artifactId>jboss-managed</artifactId>
+         <version>2.1.1.SP2</version>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.microcontainer</groupId>
+         <artifactId>jboss-kernel</artifactId>
+         <version>2.2.0.M2</version>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.naming</groupId>
+         <artifactId>jnpserver</artifactId>
+         <version>5.0.5.Final</version>
+         <scope>test</scope>
+      </dependency>
+      
+      <dependency>
+         <groupId>org.jboss.remoting</groupId>
+         <artifactId>jboss-remoting</artifactId>
+         <version>2.5.3</version>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.spec.javax.annotation</groupId>
+         <artifactId>jboss-annotations-api_1.1_spec</artifactId>
+         <version>1.0.0.Beta2</version>
+         <scope>test</scope>
+      </dependency>
+      
+      <!-- TODO: weird jboss-remoting dependency -->
+      <dependency>
+         <groupId>oswego-concurrent</groupId>
+         <artifactId>concurrent</artifactId>
+         <version>1.3.4-jboss-update1</version>
+         <scope>test</scope>
+      </dependency>
+   </dependencies>
+
+</project>

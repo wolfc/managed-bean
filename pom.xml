@@ -32,6 +32,7 @@
         <module>metadata-impl</module>
         <module>metadata-jbmeta</module>
         <module>mc-deployer</module>
+        <module>remoting2</module>
     </modules>
 
     <!-- Build -->
