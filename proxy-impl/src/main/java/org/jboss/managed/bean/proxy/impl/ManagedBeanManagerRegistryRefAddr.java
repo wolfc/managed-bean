@@ -19,32 +19,35 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.managed.bean.metadata;
+package org.jboss.managed.bean.proxy.impl;
 
-import java.util.Collection;
+import javax.naming.RefAddr;
+
+import org.jboss.managed.bean.impl.manager.ManagedBeanManagerRegistry;
 
 /**
- * Represents the metadata for a managed bean deployment (for example: A deployment in the form of a
- * jar file containing multiple managed beans)
+ * ManagedBeanRegistryRefAddr
  *
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public interface ManagedBeanDeploymentMetaData
+public class ManagedBeanManagerRegistryRefAddr extends RefAddr
 {
 
-   /**
-    * Returns the managed beans contained in the deployment
-    * @return
-    */
-   Collection<ManagedBeanMetaData> getManagedBeans();
+   private static final long serialVersionUID = 1L;
    
-   /**
-    * Add managed beans to the deployment
-    * 
-    * @param managedBeans The managed beans
-    */
-   void addManagedBeans(ManagedBeanMetaData... managedBeans);
+   private ManagedBeanManagerRegistry registry;
    
-   ManagedBeanMetaData getManagedBean(String name);
+   public ManagedBeanManagerRegistryRefAddr(ManagedBeanManagerRegistry registry)
+   {
+      super(ManagedBeanProxyRefAddrType.MANAGER_REGISTRY_REF_ADDR_TYPE);
+      this.registry = registry;
+   }
+
+   @Override
+   public Object getContent()
+   {
+      return this.registry;
+   }
+
 }

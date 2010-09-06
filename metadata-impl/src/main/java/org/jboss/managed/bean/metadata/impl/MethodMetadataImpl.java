@@ -19,32 +19,45 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.managed.bean.metadata;
+package org.jboss.managed.bean.metadata.impl;
 
-import java.util.Collection;
+import org.jboss.managed.bean.metadata.MethodMetadata;
 
 /**
- * Represents the metadata for a managed bean deployment (for example: A deployment in the form of a
- * jar file containing multiple managed beans)
+ * MethodMetadataImpl
  *
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public interface ManagedBeanDeploymentMetaData
+public class MethodMetadataImpl implements MethodMetadata
 {
+   /** Method name */
+   private String methodName;
+   
+   /** Method params */
+   private String[] params;
+   
+   public MethodMetadataImpl(String methodName, String[] params)
+   {
+      this.methodName = methodName;
+      this.params = params;
+   }
+   
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public String getMethodName()
+   {
+      return this.methodName;
+   }
 
    /**
-    * Returns the managed beans contained in the deployment
-    * @return
+    * {@inheritDoc}
     */
-   Collection<ManagedBeanMetaData> getManagedBeans();
-   
-   /**
-    * Add managed beans to the deployment
-    * 
-    * @param managedBeans The managed beans
-    */
-   void addManagedBeans(ManagedBeanMetaData... managedBeans);
-   
-   ManagedBeanMetaData getManagedBean(String name);
+   @Override
+   public String[] getMethodParams()
+   {
+      return this.params;
+   }
 }

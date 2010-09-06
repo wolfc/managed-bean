@@ -19,32 +19,26 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.managed.bean.metadata;
+package org.jboss.managed.bean.impl.test;
 
-import java.util.Collection;
+import javax.annotation.PostConstruct;
+import javax.interceptor.InvocationContext;
 
 /**
- * Represents the metadata for a managed bean deployment (for example: A deployment in the form of a
- * jar file containing multiple managed beans)
+ * InterceptorOneWithPostConstruct
  *
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public interface ManagedBeanDeploymentMetaData
+public class InterceptorOneWithPostConstruct
 {
 
-   /**
-    * Returns the managed beans contained in the deployment
-    * @return
-    */
-   Collection<ManagedBeanMetaData> getManagedBeans();
-   
-   /**
-    * Add managed beans to the deployment
-    * 
-    * @param managedBeans The managed beans
-    */
-   void addManagedBeans(ManagedBeanMetaData... managedBeans);
-   
-   ManagedBeanMetaData getManagedBean(String name);
+   @PostConstruct
+   public void postConstruct(InvocationContext ctx) throws Exception
+   {
+      ManagedBeanWithPostConstructInterceptors target = (ManagedBeanWithPostConstructInterceptors) ctx.getTarget();
+      target.invokedPostConstructInterceptors.add(this.getClass().getName());
+      
+      ctx.proceed();
+   }
 }

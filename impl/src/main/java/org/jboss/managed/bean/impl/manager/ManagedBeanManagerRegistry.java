@@ -21,51 +21,20 @@
  */
 package org.jboss.managed.bean.impl.manager;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * TODO: This is WIP. Probably will be removed in the near future 
+ * ManagedBeanManagerRegistry
  *
- * Registry for maintaining {@link ManagedBeanManager}s
+ * FIXME: This needs to move to SPI, once {@link ManagedBeanManager}
+ * is moved to SPI too
  * 
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public class ManagedBeanManagerRegistry
+public interface ManagedBeanManagerRegistry
 {
 
-   private static Map<String, ManagedBeanManager<?>> registry = new ConcurrentHashMap<String, ManagedBeanManager<?>>();
+   ManagedBeanManager<?> get(String registryId) throws IllegalArgumentException;
    
-   public static void register(String registryId, ManagedBeanManager<?> managedBeanManager) throws IllegalArgumentException
-   {
-      if (registry.containsKey(registryId))
-      {
-         throw new IllegalArgumentException("A managed bean manager is already registered with id " + registryId);
-      }
-      registry.put(registryId, managedBeanManager);
-   }
-   
-   public static ManagedBeanManager<?> unregister(String registryId) throws IllegalArgumentException
-   {
-      if (registry.containsKey(registryId) == false)
-      {
-         throw new IllegalArgumentException("No managed bean manager registered with id " + registryId);
-      }
-      return registry.remove(registryId);
-   }
-   
-   public static ManagedBeanManager<?> get(String registryId) throws IllegalArgumentException
-   {
-      if (registry.containsKey(registryId) == false)
-      {
-         throw new IllegalArgumentException("No managed bean manager registered with id " + registryId);
-      }
-      return registry.get(registryId);
-   }
-   
-   public static boolean isRegistered(String registryId)
-   {
-      return registry.containsKey(registryId);
-   }
+   boolean isRegistered(String registryId);
 }

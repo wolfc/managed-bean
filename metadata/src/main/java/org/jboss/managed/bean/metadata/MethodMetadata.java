@@ -21,30 +21,25 @@
  */
 package org.jboss.managed.bean.metadata;
 
-import java.util.Collection;
-
 /**
- * Represents the metadata for a managed bean deployment (for example: A deployment in the form of a
- * jar file containing multiple managed beans)
+ * Represents a method
  *
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public interface ManagedBeanDeploymentMetaData
+public interface MethodMetadata
 {
 
    /**
-    * Returns the managed beans contained in the deployment
+    * Returns the name of the method
     * @return
     */
-   Collection<ManagedBeanMetaData> getManagedBeans();
+   String getMethodName();
    
    /**
-    * Add managed beans to the deployment
-    * 
-    * @param managedBeans The managed beans
+    * Returns an array of fully qualified class names of the
+    * parameter types accepted by this named method
+    * @return
     */
-   void addManagedBeans(ManagedBeanMetaData... managedBeans);
-   
-   ManagedBeanMetaData getManagedBean(String name);
+   String[] getMethodParams();
 }

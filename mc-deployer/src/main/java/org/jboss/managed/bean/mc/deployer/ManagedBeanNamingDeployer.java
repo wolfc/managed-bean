@@ -23,7 +23,12 @@ package org.jboss.managed.bean.mc.deployer;
 
 import java.util.Collection;
 
+import javax.naming.RefAddr;
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
+
 import org.jboss.beans.metadata.api.annotations.Inject;
+import org.jboss.beans.metadata.plugins.AbstractInjectionValueMetaData;
 import org.jboss.beans.metadata.plugins.builder.BeanMetaDataBuilderFactory;
 import org.jboss.beans.metadata.spi.BeanMetaData;
 import org.jboss.beans.metadata.spi.builder.BeanMetaDataBuilder;
@@ -31,37 +36,44 @@ import org.jboss.deployers.spi.DeploymentException;
 import org.jboss.deployers.spi.deployer.DeploymentStages;
 import org.jboss.deployers.spi.deployer.helpers.AbstractDeployer;
 import org.jboss.deployers.structure.spi.DeploymentUnit;
-import org.jboss.managed.bean.impl.manager.ManagedBeanManager;
+import org.jboss.managed.bean.impl.manager.ManagedBeanManagerRegistry;
 import org.jboss.managed.bean.metadata.ManagedBeanDeploymentMetaData;
 import org.jboss.managed.bean.metadata.ManagedBeanMetaData;
+import org.jboss.managed.bean.proxy.impl.ManagedBeanManagerRegistryRefAddr;
+import org.jboss.managed.bean.proxy.impl.ManagedBeanProxyObjectFactory;
+import org.jboss.managed.bean.proxy.impl.ManagedBeanProxyRefAddrType;
 import org.jboss.reloaded.naming.deployers.javaee.JavaEEComponentInformer;
 
 /**
- * Responsible for picking up {@link DeploymentUnit}s which have {@link ManagedBeanDeploymentMetaData}
- * and create a {@link ManagedBeanManager} for each of the {@link ManagedBeanMetaData} contained in
- * that {@link ManagedBeanDeploymentMetaData}
+ * ManagedBeanNamingDeployer
  *
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public class ManagedBeanManagerDeployer extends AbstractDeployer
+public class ManagedBeanNamingDeployer extends AbstractDeployer
 {
    /**
     * component informer
     */
+   @Inject
    private JavaEEComponentInformer javaeeComponentInformer;
+   
+   @Inject
+   private ManagedBeanManagerRegistry managedBeanManagerRegistry;
 
-   public ManagedBeanManagerDeployer()
+   public ManagedBeanNamingDeployer()
    {
       this.setStage(DeploymentStages.REAL);
 
       this.setInput(ManagedBeanDeploymentMetaData.class);
 
-      // we output MC bean metadata
-      this.setOutput(BeanMetaData.class);
    }
 
-   @Inject
+   public void setManagedBeanManagerRegistry(ManagedBeanManagerRegistry registry)
+   {
+      this.managedBeanManagerRegistry = registry;
+   }
+   
    public void setJavaEEComponentInformer(JavaEEComponentInformer componentInformer)
    {
       this.javaeeComponentInformer = componentInformer;
@@ -98,15 +110,29 @@ public class ManagedBeanManagerDeployer extends AbstractDeployer
                + " in unit " + unit, cnfe);
       }
 
-      String managedBeanManagerMCBeanName = this.getManagedBeanManagerMCBeanName(unit, managedBean);
-      ManagedBeanManager<?> managedBeanManager = new ManagedBeanManager(beanClass,managedBean);
-      BeanMetaDataBuilder builder = BeanMetaDataBuilderFactory.createBuilder(managedBeanManagerMCBeanName,
-            ManagedBeanManager.class.getName());
+      String managedBeanManagerName = this.getManagedBeanManagerMCBeanName(unit, managedBean);
 
-      builder.setConstructorValue(managedBeanManager);
+      String moduleName = this.javaeeComponentInformer.getModulePath(unit);
+      String jndiName = moduleName + "/" + managedBean.getName();
+      
+      Reference reference = new Reference("Object Factory for managed bean", ManagedBeanProxyObjectFactory.class.getName(), null);
+      
+      RefAddr managerNameRefAddr = new StringRefAddr(ManagedBeanProxyRefAddrType.MANAGER_NAME_REF_ADDR_TYPE, managedBeanManagerName);
+      reference.add(managerNameRefAddr);
+      
+      RefAddr managedBeanManagerRegistryRefAddr = new ManagedBeanManagerRegistryRefAddr(this.managedBeanManagerRegistry);
+      reference.add(managedBeanManagerRegistryRefAddr);
+      
+      JNDIBinder jndiBinder = new JNDIBinder(jndiName, reference);
 
-      unit.addAttachment(BeanMetaData.class + ":" + managedBeanManagerMCBeanName, builder.getBeanMetaData(),
-            BeanMetaData.class);
+      String jndiBinderName = "managed-bean-jndibinder:" + jndiName;
+      BeanMetaDataBuilder builder = BeanMetaDataBuilderFactory
+            .createBuilder(jndiBinderName, JNDIBinder.class.getName());
+      builder.setConstructorValue(jndiBinder);
+      AbstractInjectionValueMetaData javaeeModuleInjectMetaData = new AbstractInjectionValueMetaData(this
+            .getJavaEEModuleMCBeanName(unit));
+      builder.addPropertyMetaData("jndiContext", javaeeModuleInjectMetaData);
+      unit.addAttachment(BeanMetaData.class + ":" + jndiBinderName, builder.getBeanMetaData(), BeanMetaData.class);
 
    }
 
@@ -115,6 +141,20 @@ public class ManagedBeanManagerDeployer extends AbstractDeployer
       ClassLoader cl = unit.getClassLoader();
 
       return Class.forName(managedBean.getManagedBeanClass(), false, cl);
+   }
+
+   private String getJavaEEModuleMCBeanName(DeploymentUnit deploymentUnit)
+   {
+      String applicationName = this.javaeeComponentInformer.getApplicationName(deploymentUnit);
+      String moduleName = this.javaeeComponentInformer.getModulePath(deploymentUnit);
+
+      final StringBuilder builder = new StringBuilder("jboss.naming:");
+      if (applicationName != null)
+      {
+         builder.append("application=").append(applicationName).append(",");
+      }
+      builder.append("module=").append(moduleName);
+      return builder.toString();
    }
    
    private String getManagedBeanManagerMCBeanName(DeploymentUnit deploymentUnit, ManagedBeanMetaData managedBean)
@@ -137,5 +177,4 @@ public class ManagedBeanManagerDeployer extends AbstractDeployer
 
       return sb.toString();
    }
-
 }

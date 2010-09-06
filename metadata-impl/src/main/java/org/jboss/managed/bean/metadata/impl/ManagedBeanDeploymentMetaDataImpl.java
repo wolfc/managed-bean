@@ -19,32 +19,45 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.managed.bean.metadata;
+package org.jboss.managed.bean.metadata.impl;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.jboss.managed.bean.metadata.ManagedBeanDeploymentMetaData;
+import org.jboss.managed.bean.metadata.ManagedBeanMetaData;
 
 /**
- * Represents the metadata for a managed bean deployment (for example: A deployment in the form of a
- * jar file containing multiple managed beans)
+ * ManagedBeanDeploymentMetaDataImpl
  *
  * @author Jaikiran Pai
  * @version $Revision: $
  */
-public interface ManagedBeanDeploymentMetaData
+public class ManagedBeanDeploymentMetaDataImpl implements ManagedBeanDeploymentMetaData
 {
 
-   /**
-    * Returns the managed beans contained in the deployment
-    * @return
-    */
-   Collection<ManagedBeanMetaData> getManagedBeans();
-   
-   /**
-    * Add managed beans to the deployment
-    * 
-    * @param managedBeans The managed beans
-    */
-   void addManagedBeans(ManagedBeanMetaData... managedBeans);
-   
-   ManagedBeanMetaData getManagedBean(String name);
+   private Map<String, ManagedBeanMetaData> managedBeans = new HashMap<String, ManagedBeanMetaData>();
+
+   @Override
+   public Collection<ManagedBeanMetaData> getManagedBeans()
+   {
+      return this.managedBeans.values();
+   }
+
+   @Override
+   public void addManagedBeans(ManagedBeanMetaData... managedBeans)
+   {
+      for (ManagedBeanMetaData managedBean : managedBeans)
+      {
+         this.managedBeans.put(managedBean.getName(), managedBean);
+      }
+   }
+
+   @Override
+   public ManagedBeanMetaData getManagedBean(String name)
+   {
+      return this.managedBeans.get(name);
+   }
+
 }
