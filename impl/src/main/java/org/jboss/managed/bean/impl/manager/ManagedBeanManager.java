@@ -21,12 +21,6 @@
  */
 package org.jboss.managed.bean.impl.manager;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-
-import javax.interceptor.InvocationContext;
-
 import org.jboss.interceptor.proxy.DefaultInvocationContextFactory;
 import org.jboss.interceptor.proxy.InterceptorInvocation;
 import org.jboss.interceptor.proxy.SimpleInterceptionChain;
@@ -35,8 +29,13 @@ import org.jboss.interceptor.spi.metadata.InterceptorMetadata;
 import org.jboss.interceptor.spi.model.InterceptionType;
 import org.jboss.managed.bean.impl.ManagedBeanInstanceImpl;
 import org.jboss.managed.bean.metadata.ManagedBeanMetaData;
-import org.jboss.managed.bean.spi.ManagedBeanInstance;
 import org.jboss.managed.bean.metadata.MethodMetadata;
+import org.jboss.managed.bean.spi.ManagedBeanInstance;
+
+import javax.interceptor.InvocationContext;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
 /**
  * Manages a managed bean.
  * 
@@ -90,7 +89,7 @@ public class ManagedBeanManager<T>
       this.mbMetaData = beanMetaData;
    }
 
-   public Object invoke(ManagedBeanInstance<T> managedBeanInstance, Method method, Object[] args) throws Throwable
+   public Object invoke(ManagedBeanInstance<T> managedBeanInstance, Method method, Object[] args) throws Exception
    {
       Collection<InterceptorMetadata> aroundInvokeInterceptors = this.mbMetaData.getAroundInvokeInterceptors();
       Collection<InterceptorInvocation<?>> interceptorInvocations = new ArrayList<InterceptorInvocation<?>>(
