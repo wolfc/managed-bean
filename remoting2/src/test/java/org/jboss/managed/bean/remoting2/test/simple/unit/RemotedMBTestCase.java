@@ -25,18 +25,26 @@ import org.jboss.beans.metadata.plugins.builder.BeanMetaDataBuilderFactory;
 import org.jboss.beans.metadata.spi.builder.BeanMetaDataBuilder;
 import org.jboss.managed.bean.remoting2.test.common.ManagedBeanInstaller;
 import org.jboss.managed.bean.remoting2.test.common.RemoteKernelController;
+import org.jboss.managed.bean.remoting2.test.common.RemoteManagedBeanManager;
 import org.jboss.managed.bean.remoting2.test.common.RemoteManagedBeanManagerImpl;
+import org.jboss.managed.bean.remoting2.test.common.RemoteService;
 import org.jboss.managed.bean.remoting2.test.common.TinyServer;
 import org.jboss.managed.bean.remoting2.test.process.JavaProcess;
 import org.jboss.managed.bean.remoting2.test.process.ProcessEvent;
 import org.jboss.managed.bean.remoting2.test.process.ProcessEventListener;
 import org.jboss.managed.bean.remoting2.test.process.ProcessManager;
+import org.jboss.managed.bean.remoting2.test.simple.GreeterRemote;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import java.io.Serializable;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Properties;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
@@ -102,6 +110,35 @@ public class RemotedMBTestCase
       barrier.await(10, SECONDS);
    }
 
+   private static <T> T createRemoteManagedBeanManagerProxy(final RemoteManagedBeanManager manager, final Serializable id, Class<T> remoteClass)
+   {
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      Class<?> interfaces[] = { remoteClass };
+      InvocationHandler handler = new InvocationHandler() {
+         @Override
+         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
+         {
+            return manager.invoke(id, method, args);
+         }
+      };
+      return (T) Proxy.newProxyInstance(loader, interfaces, handler);
+   }
+
+   private static <T> T createRemoteServiceProxy(Context ctx, final String name, Class<T> iface) throws NamingException
+   {
+      final RemoteService remoteService = (RemoteService) ctx.lookup("RemoteService");
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      Class<?> interfaces[] = { iface };
+      InvocationHandler handler = new InvocationHandler() {
+         @Override
+         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
+         {
+            return remoteService.invoke(name, method, args);
+         }
+      };
+      return (T) Proxy.newProxyInstance(loader, interfaces, handler);
+   }
+   
    @Test
    public void test1() throws Throwable
    {
@@ -109,7 +146,8 @@ public class RemotedMBTestCase
       props.put(Context.PROVIDER_URL, "jnp://localhost:1099");
 
       InitialContext ctx = new InitialContext(props);
-      RemoteKernelController remoteKernelController = (RemoteKernelController) ctx.lookup("RemoteKernelController");
+//      RemoteKernelController remoteKernelController = (RemoteKernelController) ctx.lookup("RemoteKernelController");
+      RemoteKernelController remoteKernelController = createRemoteServiceProxy(ctx, "RemoteKernelController", RemoteKernelController.class);
 
       BeanMetaDataBuilder builder = BeanMetaDataBuilderFactory.createBuilder("simple-mb-installer", ManagedBeanInstaller.class.getName());
       remoteKernelController.install(builder.getBeanMetaData());
@@ -117,28 +155,18 @@ public class RemotedMBTestCase
       BeanMetaDataBuilder builder2 = BeanMetaDataBuilderFactory.createBuilder("simple/RemoteManagedBeanManager", RemoteManagedBeanManagerImpl.class.getName());
       builder2.addPropertyMetaData("managedBeanManager", builder2.createInject("org.jboss.managedbean:name=simple"));
       remoteKernelController.install(builder2.getBeanMetaData());
-      
-      System.out.println(ctx.lookup("RemoteManagedBeanManager"));
-      /*
-      String managedBeanId = "org.jboss.managedbean:name=simple";
 
-      // see jboss-beans.xml for the proper settings
-      InvokerLocator locator = new InvokerLocator("socket://localhost:3874");
-      String subsystem = "ManagedBeans";
-      Client client = new Client(locator, subsystem);
-      client.connect();
-      try
-      {
-         ManagedBeanInstance<?> instance = null;
-         Method method = null;
-         Object arguments[] = null;
-         Object param[] = { managedBeanId, instance, method, arguments };
-         client.invoke(param);
-      }
-      finally
-      {
-         client.disconnect();
-      }
-      */
+//      RemoteService remoteService = (RemoteService) ctx.lookup("RemoteService");
+//      System.out.println(remoteService);
+
+      RemoteManagedBeanManager manager = createRemoteServiceProxy(ctx, "simple/RemoteManagedBeanManager", RemoteManagedBeanManager.class);
+      
+      Serializable id = manager.createInstance();
+      System.out.println("id = " + id);
+
+      GreeterRemote greeter = createRemoteManagedBeanManagerProxy(manager, id, GreeterRemote.class);
+
+      System.out.println(greeter.greet("your royal wickedness"));
    }
+
 }

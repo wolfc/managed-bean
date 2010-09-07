@@ -23,7 +23,6 @@ package org.jboss.managed.bean.remoting2.test.common;
 
 import org.jboss.managed.bean.impl.manager.ManagedBeanManager;
 import org.jboss.managed.bean.spi.ManagedBeanInstance;
-import org.jboss.remoting.transporter.TransporterClient;
 
 import javax.naming.InitialContext;
 import java.io.Serializable;
@@ -65,12 +64,12 @@ public class RemoteManagedBeanManagerImpl<T> implements RemoteManagedBeanManager
       // FIXME: proper JNDI name
       InitialContext ctx = new InitialContext();
       // FIXME: this cannot be, because there are more than 1 RemoteManagedBeanManagers
-      ctx.bind("RemoteManagedBeanManager", TransporterClient.createTransporterClient("socket://0.0.0.0:3874", RemoteManagedBeanManager.class));
+      //ctx.bind("RemoteManagedBeanManager", TransporterClient.createTransporterClient("socket://0.0.0.0:3874", RemoteManagedBeanManager.class));
    }
 
    public void stop() throws Exception
    {
       InitialContext ctx = new InitialContext();
-      ctx.unbind("RemoteManagedBeanManager");
+      //ctx.unbind("RemoteManagedBeanManager");
    }
 }

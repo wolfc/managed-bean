@@ -24,9 +24,6 @@ package org.jboss.managed.bean.remoting2.test.common;
 import org.jboss.beans.metadata.api.annotations.Inject;
 import org.jboss.beans.metadata.spi.BeanMetaData;
 import org.jboss.kernel.Kernel;
-import org.jboss.remoting.transporter.TransporterClient;
-
-import javax.naming.InitialContext;
 
 /**
  * Provides functions of MC which can be remotely called.
@@ -43,6 +40,7 @@ public class RemoteKernelControllerImpl implements RemoteKernelController
    public void install(BeanMetaData metaData) throws Throwable
    {
       kernel.getController().install(metaData);
+      // FIXME: analyze and throw proper exception
       System.out.println(kernel.getController().getNotInstalled());
    }
 
@@ -59,19 +57,15 @@ public class RemoteKernelControllerImpl implements RemoteKernelController
    
    public void start() throws Exception
    {
-      InitialContext ctx = new InitialContext();
-//      Class<?> interfaces[] = { RemoteKernelController.class };
-//      Object proxy = Remoting.createPojiProxy(OID, interfaces, "socket://0.0.0.0:3874");
-//      ctx.rebind("RemoteKernelController", proxy);
-//      Dispatcher.singleton.registerTarget(OID, this);
-      ctx.rebind("RemoteKernelController", TransporterClient.createTransporterClient("socket://0.0.0.0:3874", RemoteKernelController.class));
+//      InitialContext ctx = new InitialContext();
+//      String locatorURI = "socket://0.0.0.0:3874?datatype=invocation&marshaller=org.jboss.managed.bean.remoting2.test.common.InvocationMarshaller&unmarshaller=org.jboss.managed.bean.remoting2.test.common.InvocationUnMarshaller";
+//      ctx.rebind("RemoteKernelController", TransporterClient.createTransporterClient(locatorURI, RemoteKernelController.class));
    }
    
    public void stop() throws Exception
    {
-//      Dispatcher.singleton.unregisterTarget(OID);
-      InitialContext ctx = new InitialContext();
-      ctx.unbind("RemoteKernelController");
+//      InitialContext ctx = new InitialContext();
+//      ctx.unbind("RemoteKernelController");
    }
    
    // Must implement toString otherwise it won't get exposed via ClassProxyFactory.getMethodMap

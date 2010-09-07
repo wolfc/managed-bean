@@ -64,7 +64,11 @@
    </bean>
 
    <bean name="Connector" class="org.jboss.remoting.transport.Connector">
-      <property name="invokerLocator">socket://0.0.0.0:3874</property>
+      <property name="invokerLocator">socket://0.0.0.0:3874?datatype=invocation&amp;marshaller=org.jboss.managed.bean.remoting2.test.common.InvocationMarshaller&amp;unmarshaller=org.jboss.managed.bean.remoting2.test.common.InvocationUnMarshaller</property>
       <property name="serverConfiguration"><inject bean="ServerConfiguration"/></property>
+   </bean>
+
+   <bean name="RemoteService" class="org.jboss.managed.bean.remoting2.test.common.RemoteServiceImpl">
+      <property name="connector"><inject bean="Connector"/></property>
    </bean>
 </deployment>
